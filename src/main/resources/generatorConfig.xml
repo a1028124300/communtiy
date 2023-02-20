@@ -8,10 +8,11 @@
     <context id="DB2Tables" targetRuntime="MyBatis3">
 
         <plugin type="org.mybatis.generator.plugins.RowBoundsPlugin"></plugin>
-        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
-                        connectionURL="jdbc:mysql://47.108.83.186:3306/community"
-                        userId="community"
-                        password="community">
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/community"
+                        userId="root"
+                        password="root">
+            <property name="nullCatalogMeansCurrent" value="true"></property>
         </jdbcConnection>
 
         <javaTypeResolver >
@@ -33,5 +34,6 @@
 
         <table tableName="user" domainObjectName="User" ></table>
         <table tableName="question" domainObjectName="Question"></table>
+        <table tableName="comment" domainObjectName="Comment"></table>
     </context>
 </generatorConfiguration>

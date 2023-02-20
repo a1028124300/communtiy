@@ -4,6 +4,7 @@ import ink.wujun.community.dto.PaginationDTO;
 import ink.wujun.community.dto.QuestionDTO;
 import ink.wujun.community.exception.CustomizeErrorCode;
 import ink.wujun.community.exception.CustomizeException;
+import ink.wujun.community.mapper.QuestionExtMapper;
 import ink.wujun.community.mapper.QuestionMapper;
 import ink.wujun.community.mapper.UserMapper;
 import ink.wujun.community.model.Question;
@@ -29,6 +30,9 @@ public class QuestionService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private QuestionExtMapper questionExtMapper;
 
     public PaginationDTO list(Integer page, Integer size) {
 
@@ -70,7 +74,7 @@ public class QuestionService {
         return paginationDTO;
     }
 
-    public PaginationDTO listByUserId(Integer userId, Integer page, Integer size) {
+    public PaginationDTO listByUserId(Long userId, Integer page, Integer size) {
         PaginationDTO paginationDTO = new PaginationDTO();
         QuestionExample questionExample = new QuestionExample();
         questionExample.createCriteria()
@@ -116,7 +120,7 @@ public class QuestionService {
 
     }
 
-    public QuestionDTO getById(Integer id) {
+    public QuestionDTO getById(Long id) {
         Question question = questionMapper.selectByPrimaryKey(id);
         if(question == null){
             throw new CustomizeException(CustomizeErrorCode.QUESTION_NOT_FOUND);
@@ -132,6 +136,9 @@ public class QuestionService {
         if(question.getId() == null){
             question.setGmtCreate(System.currentTimeMillis());
             question.setGmtModified(question.getGmtCreate());
+            question.setViewCount(0);
+            question.setLikeCount(0);
+            question.setCommentCount(0);
             questionMapper.insert(question);
         }else {
             question.setGmtModified(question.getGmtCreate());
@@ -149,5 +156,12 @@ public class QuestionService {
                throw new CustomizeException(CustomizeErrorCode.QUESTION_NOT_FOUND);
            }
         }
+    }
+
+    public void incView(Long id) {
+        Question question = new Question();
+        question.setId(id);
+        question.setViewCount(1);
+        questionExtMapper.incView(question);
     }
 }
