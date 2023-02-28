@@ -3,6 +3,7 @@ package ink.wujun.community.contorller;
 
 import ink.wujun.community.dto.CommentDTO;
 import ink.wujun.community.dto.QuestionDTO;
+import ink.wujun.community.enums.CommentTypeEnum;
 import ink.wujun.community.service.CommentService;
 import ink.wujun.community.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,11 +32,14 @@ public class QuestionController {
 
         QuestionDTO questionDTO = questionService.getById(id);
 
-        List<CommentDTO> comments = commentService.listByQuestionId(id);
+        List<QuestionDTO> relatedQuestions = questionService.selectRelated(questionDTO);
+
+        List<CommentDTO> comments = commentService.listByTargetId(id, CommentTypeEnum.QUESTION);
         //累加阅读数
         questionService.incView(id);
         model.addAttribute("question", questionDTO);
-        model.addAttribute("commnets", comments);
+        model.addAttribute("comments", comments);
+        model.addAttribute("relatedQuestions", relatedQuestions);
         return "question";
     }
 }

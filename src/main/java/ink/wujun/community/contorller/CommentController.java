@@ -1,7 +1,9 @@
 package ink.wujun.community.contorller;
 
 import ink.wujun.community.dto.CommentCreatDTO;
+import ink.wujun.community.dto.CommentDTO;
 import ink.wujun.community.dto.ResultDTO;
+import ink.wujun.community.enums.CommentTypeEnum;
 import ink.wujun.community.exception.CustomizeErrorCode;
 import ink.wujun.community.mapper.CommentMapper;
 import ink.wujun.community.model.Comment;
@@ -10,12 +12,10 @@ import ink.wujun.community.service.CommentService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author WuJun
@@ -52,5 +52,13 @@ public class CommentController {
         comment.setLikeCount(0L);
         commentService.insert(comment);
         return ResultDTO.okOf();
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/comment/{id}",method = RequestMethod.GET)
+    public ResultDTO<List> comments(@PathVariable(name = "id") Long id){
+
+        List<CommentDTO> commentDTOS = commentService.listByTargetId(id, CommentTypeEnum.COMMENT);
+        return ResultDTO.okOf(commentDTOS);
     }
 }
