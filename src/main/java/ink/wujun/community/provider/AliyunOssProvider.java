@@ -6,13 +6,17 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.OSSException;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
+import com.aliyuncs.sts.model.v20150401.AssumeRoleResponse;
 import ink.wujun.community.exception.CustomizeErrorCode;
 import ink.wujun.community.exception.CustomizeException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -25,17 +29,20 @@ public class AliyunOssProvider {
     @Value("${aliyunOss.endpoint}")
     String endpoint;
 
-    @Value("${aliyunOss.accessKeyId}")
-    String accessKeyId;
-
-    @Value("${aliyunOss.accessKeySecret}")
-    String accessKeySecret;
-
     @Value("${aliyunOss.bucketName}")
     String bucketName;
 
+    @Autowired
+    private AssumeRole assumeRole;
+
     public String upload(InputStream fileStream,String fileName){
 
+
+        AssumeRoleResponse response = assumeRole.getAssumeRole();
+
+        String accessKeyId = response.getCredentials().getAccessKeyId();
+        String accessKeySecret = response.getCredentials().getAccessKeySecret();
+        String securityToken = response.getCredentials().getSecurityToken();
         String generateFileName;
         String[] filePaths = fileName.split("\\.");
         if(filePaths.length>1){
@@ -44,7 +51,7 @@ public class AliyunOssProvider {
             return null;
         }
         // 创建OSSClient实例。
-        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret,securityToken);
         try {
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, generateFileName, fileStream);
             // 设置该属性可以返回response。如果不设置，则返回的response为空。
@@ -53,8 +60,9 @@ public class AliyunOssProvider {
             PutObjectResult result = ossClient.putObject(putObjectRequest);
             // 如果上传成功，则返回200。
             if(result.getResponse().getStatusCode() == 200){
-                String uri = result.getResponse().getUri();
-                return uri;
+                Date expiration = new Date(new Date().getTime() + 24 * 60 * 60 * 365);
+                URL url = ossClient.generatePresignedUrl(bucketName, generateFileName, expiration);
+                return url.toString();
             }else {
                 throw new CustomizeException(CustomizeErrorCode.FILE_UPLOAD_FAIL);
             }
