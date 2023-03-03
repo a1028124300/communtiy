@@ -28,13 +28,14 @@ public class FileController {
         MultipartHttpServletRequest multipartHttpServletRequest = (MultipartHttpServletRequest) request;
         MultipartFile file = multipartHttpServletRequest.getFile("editormd-image-file");
         try {
-            aliyunOssProvider.upload(file.getInputStream(),file.getOriginalFilename());
-        } catch (IOException e) {
+            String uri = aliyunOssProvider.upload(file.getInputStream(), file.getOriginalFilename());
+            FileDTO fileDTO = new FileDTO();
+            fileDTO.setSuccess(1);
+            fileDTO.setUrl(uri);
+            return fileDTO;
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        FileDTO fileDTO = new FileDTO();
-        fileDTO.setSuccess(1);
-        fileDTO.setUrl("/images/wechat.png");
-        return fileDTO;
+        return null;
     }
 }
