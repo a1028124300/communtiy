@@ -32,26 +32,25 @@ public class AliyunOssProvider {
     @Value("${aliyunOss.bucketName}")
     String bucketName;
 
-    @Autowired
-    private AssumeRole assumeRole;
+    @Value("${aliyunOss.accessKeyId}")
+    String accessKeyId;
+
+    @Value("${aliyunOss.accessKeySecret}")
+    String accessKeySecret;
+
 
     public String upload(InputStream fileStream,String fileName){
 
 
-        AssumeRoleResponse response = assumeRole.getAssumeRole();
-
-        String accessKeyId = response.getCredentials().getAccessKeyId();
-        String accessKeySecret = response.getCredentials().getAccessKeySecret();
-        String securityToken = response.getCredentials().getSecurityToken();
         String generateFileName;
         String[] filePaths = fileName.split("\\.");
         if(filePaths.length>1){
             generateFileName = UUID.randomUUID().toString() + "."+ filePaths[filePaths.length-1];
         }else {
-            return null;
+            throw new CustomizeException(CustomizeErrorCode.FILE_UPLOAD_FAIL);
         }
         // 创建OSSClient实例。
-        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret,securityToken);
+        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
         try {
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, generateFileName, fileStream);
             // 设置该属性可以返回response。如果不设置，则返回的response为空。
@@ -60,9 +59,8 @@ public class AliyunOssProvider {
             PutObjectResult result = ossClient.putObject(putObjectRequest);
             // 如果上传成功，则返回200。
             if(result.getResponse().getStatusCode() == 200){
-                Date expiration = new Date(new Date().getTime() + 24 * 60 * 60 * 365);
-                URL url = ossClient.generatePresignedUrl(bucketName, generateFileName, expiration);
-                return url.toString();
+                String uri = result.getResponse().getUri();
+                return uri;
             }else {
                 throw new CustomizeException(CustomizeErrorCode.FILE_UPLOAD_FAIL);
             }
