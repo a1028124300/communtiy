@@ -41,7 +41,7 @@ public class PaginationDTO<T> {
         }
 
 
-        if(page == totalPage){
+        if(page == totalPage || totalPage == 0){
             showNext = false;
         }else{
             showNext = true;
@@ -53,7 +53,7 @@ public class PaginationDTO<T> {
             showFirstPage = true;
         }
 
-        if(pages.contains(totalPage)){
+        if(pages.contains(totalPage) || totalPage == 0){
             showEndPage = false;
         }else {
             showEndPage = true;

@@ -2,6 +2,7 @@ package ink.wujun.community.service;
 
 import ink.wujun.community.dto.PaginationDTO;
 import ink.wujun.community.dto.QuestionDTO;
+import ink.wujun.community.dto.QuestionQueryDTO;
 import ink.wujun.community.exception.CustomizeErrorCode;
 import ink.wujun.community.exception.CustomizeException;
 import ink.wujun.community.mapper.QuestionExtMapper;
@@ -36,10 +37,14 @@ public class QuestionService {
     @Autowired
     private QuestionExtMapper questionExtMapper;
 
-    public PaginationDTO list(Integer page, Integer size) {
-
+    public PaginationDTO list(String search, Integer page, Integer size) {
+        if(StringUtils.isNotBlank(search)){
+            search = StringUtils.replace(search, " ", "|");
+        }
         PaginationDTO paginationDTO = new PaginationDTO();
-        Integer totalCount = (int)questionMapper.countByExample(new QuestionExample());
+        QuestionQueryDTO questionQueryDTO = new QuestionQueryDTO();
+        questionQueryDTO.setSearch(search);
+        Integer totalCount = questionExtMapper.countBySearch(questionQueryDTO);
         Integer totalPage;
         if(totalCount % size == 0){
             totalPage = totalCount / size;
@@ -59,7 +64,9 @@ public class QuestionService {
 
         QuestionExample questionExample = new QuestionExample();
         questionExample.setOrderByClause("gmt_create desc");
-        List<Question> questions = questionMapper.selectByExampleWithRowbounds(questionExample, new RowBounds(offset, size));
+        questionQueryDTO.setPage(offset);
+        questionQueryDTO.setSize(size);
+        List<Question> questions = questionExtMapper.selectBySearch(questionQueryDTO);
 
         List<QuestionDTO> questionDTOList = new ArrayList<>();
 
